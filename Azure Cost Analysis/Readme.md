@@ -98,7 +98,7 @@ The Azure Cost Analysis Dashboard supports:
 | Page | Description | Preview |
 |-------|--------------|----------|
 | **Home Overview** | Summary of KPIs, trends, and geographic cost breakdown. | ![Home Dashboard](https://github.com/Ajit-Sabat/Power-BI-Portfolio/blob/main/Azure%20Cost%20Analysis/Azure%20Home.png) |
-| **Region Analysis** | Cost and transactions by geography and country. | ![Region Dashboard](<your-image-link-here>) |
+| **Region Analysis** | Cost and transactions by geography and country. | ![Region Dashboard](<https://github.com/Ajit-Sabat/Power-BI-Portfolio/blob/main/Azure%20Cost%20Analysis/Region.png>) |
 | **Services Analysis** | Cost distribution by service and product. | ![Services Dashboard](<your-image-link-here>) |
 
 
