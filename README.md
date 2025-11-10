@@ -19,7 +19,7 @@ Welcome to my **Power BI portfolio**, showcasing three end-to-end projects that 
 **Goal:** Monitor and analyze Azure resource costs to optimize cloud spending.  
 **Tools:** Power BI, Power Query, DAX  
 **Preview:**  
-![Azure Cost Azure Cost (Analysis/Azure Home.png)
+![Azure Cost Azure Cost](OTT-Dataset/images/ott_dashboard_preview.png)
 
 ---
 
