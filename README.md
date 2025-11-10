@@ -15,7 +15,7 @@ Welcome to my **Power BI portfolio**, showcasing three end-to-end projects that 
 
 ---
 
-### 2. [Azure Cost Analysis](Azure-Cost-Dashboard/README.md)
+### 2. [Azure Cost Analysis](Azure Cost Analysis/README.md)
 **Goal:** Monitor and analyze Azure resource costs to optimize cloud spending.  
 **Tools:** Power BI, Power Query, DAX  
 **Preview:**  
