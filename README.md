@@ -88,7 +88,7 @@ Monitor and analyze Azure resource costs to optimize cloud spending and identify
 
 <div align="center">
 
-![Olist Dashboard](Olist%20Ecommerce%20Dashboard/dashboard_preview.png)
+![Olist Dashboard](Olist%20Ecommerce%20Dashboard/Executive.png)
 
 </div>
 
@@ -111,7 +111,7 @@ Deliver an end-to-end data analytics pipeline and interactive Power BI dashboard
 
 **📂 Technologies:** Power BI | Python (Pandas, NumPy) | MySQL | DAX | Power Query
 
-**[📁 View Project Details](Olist%20Ecommerce%20Dashboard/README.md)** | **[📊 Interactive Dashboard](#)** | **[💾 Download .pbix](#)**
+**[📁 View Project Details](Olist%20Ecommerce%20Dashboard)** 
 
 ---
 
@@ -182,35 +182,6 @@ pip install pandas numpy mysql-connector-python
 python data_processing.py
 ```
 
----
-
-## 📚 Project Structure
-
-```
-Power-BI-Portfolio/
-│
-├── OTT-Dataset/
-│   ├── README.md
-│   ├── images/
-│   │   └── ott_dashboard_preview.png
-│   └── ott_analysis.pbix
-│
-├── Azure Cost Analysis/
-│   ├── README.md
-│   ├── Azure Home.png
-│   └── azure_cost_dashboard.pbix
-│
-├── Olist Ecommerce Dashboard/
-│   ├── README.md
-│   ├── data/                    # Sample/anonymized datasets
-│   ├── scripts/                 # Python ETL scripts
-│   ├── images/                  # Dashboard screenshots
-│   └── olist_dashboard.pbix
-│
-└── README.md                    # This file
-```
-
----
 
 ## 📈 Portfolio Highlights
 
@@ -235,8 +206,7 @@ Power-BI-Portfolio/
 I'm always interested in discussing new projects, collaboration opportunities, or Power BI best practices!
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/ajitkumarsabat)
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Ajit-Sabat)
-[![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:your.email@example.com)
+[![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:ajit.sabat1715@gmail.com)
 
 ### 💼 Open to:
 ✅ Power BI Development Projects  
