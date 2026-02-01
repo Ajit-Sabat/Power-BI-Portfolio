@@ -1,0 +1,162 @@
+🛒 Olist E-Commerce Analytics Dashboard
+
+
+
+
+📘 Project Overview
+
+The Olist E-Commerce Analytics Dashboard provides a complete analysis of Brazil’s largest online marketplace — Olist — covering sales, customer behavior, logistics, and reviews.
+
+This project integrates:
+
+Python for data cleaning, feature engineering, and transformation,
+
+MySQL for data storage and star schema modeling, and
+
+Power BI for interactive visualization and reporting.
+
+The dashboard enables stakeholders to monitor key KPIs, track revenue trends, optimize delivery operations, and analyze customer satisfaction metrics.
+
+🧰 Tools & Technologies
+Layer	Tools / Technologies
+Data Preparation	Python (pandas, numpy, openpyxl, mysql.connector)
+Data Storage & Modeling	MySQL (Star Schema Design)
+Visualization & Reporting	Power BI Desktop, Power Query, DAX
+Supporting Tools	Matplotlib, Excel, GitHub
+🐍 Python Data Preparation
+
+Libraries Used: pandas, numpy, mysql.connector, matplotlib, openpyxl
+
+Process Summary
+
+Data Loading & Cleaning
+
+Imported 9 CSV datasets (orders, customers, products, sellers, geolocation, payments, reviews, etc.).
+
+Removed duplicates, handled nulls, standardized column names.
+
+Translated product categories from Portuguese → English.
+
+Feature Engineering
+
+Derived analytical fields:
+
+delivery_days – time between purchase and delivery.
+
+on_time – delivery performance indicator.
+
+distance_km – calculated via Haversine formula.
+
+freight_ratio – freight cost as % of revenue.
+
+is_repeat_customer & days_since_last_order – retention metrics.
+
+Segmented customers by spending percentile (High / Mid / Low Value).
+
+Data Validation
+
+Checked null values, data types, and outliers.
+
+Ensured consistent data granularity (order_id + order_item_id).
+
+Data Export
+
+Exported clean dimension and fact tables for Power BI and MySQL:
+
+dim_customers.csv
+
+dim_sellers.csv
+
+dim_products.csv
+
+fact_orders.csv
+
+🗄️ MySQL Database Design
+
+Database: ecom_data
+Schema Type: Star Schema (Fact + Dimension Tables)
+
+Tables Created:
+
+Fact_Orders – transaction-level orders, payments, deliveries, and reviews.
+
+Dim_Customers – unique customer info with location.
+
+Dim_Sellers – seller details and region mapping.
+
+Dim_Products – product metadata and hierarchy.
+
+Dim_Date – calendar table for time-based analytics.
+
+Indexes and relationships were applied to ensure fast query performance and Power BI refresh efficiency.
+
+📊 Dashboard Structure
+Page	Description	Preview
+Executive Summary	Consolidates KPIs: Total Revenue, Orders, Customers, Freight %, Repeat Rate, and YoY growth trends.	
+
+Customer Insights	Segment analysis (High/Mid/Low Value), retention rate, and regional performance.	
+
+Operations & Logistics	Delivery performance, cancellations, average delivery days, and freight analysis.	
+
+Distance & Freight Analysis	Relationship between delivery distance, freight %, and operational efficiency.	
+
+Reviews & Payments	Customer sentiment and payment method distribution.	
+
+🖼️ Replace <replace_with_image_path> with the actual image paths in your GitHub repository.
+
+📈 Key Business Insights
+
+Revenue: Over 7M total revenue with 97% YoY growth.
+
+Customer Retention: 3.3% repeat customers, highlighting opportunities for loyalty programs.
+
+Operational Performance:
+
+96.2% successful deliveries.
+
+99.2% on-time or early deliveries.
+
+Distance & Freight Efficiency:
+
+Average delivery distance: 576 km.
+
+Freight ratio: 16.9% of order value.
+
+Customer Segmentation:
+
+Top 25% customers drive 62% of total revenue.
+
+Customer Sentiment:
+
+78% positive reviews, average rating 4.1 / 5.
+
+💡 Business Impact
+
+This dashboard allows stakeholders to:
+
+Optimize freight cost and logistics.
+
+Identify and retain high-value customers.
+
+Improve delivery efficiency and regional operations.
+
+Monitor product-level performance.
+
+Enhance customer satisfaction using review insights.
+
+🧭 How to Use
+
+Open the .pbix file in Power BI Desktop.
+
+Connect to the MySQL database or refresh using CSV datasets.
+
+Use slicers to filter by Year, Region, Customer Segment, and Delivery Status.
+
+Navigate through report pages for detailed insights.
+
+👤 Author
+
+Ajitkumar Sabat
+Power BI Developer | Data Analyst
+LinkedIn
+ • GitHub
