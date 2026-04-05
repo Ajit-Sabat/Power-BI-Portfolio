@@ -10,7 +10,7 @@
 
 ### 📊 Transforming Data into Actionable Business Intelligence
 
-[View Projects](#-featured-projects) • [Skills](#-skills--tools) • [Contact](#-lets-connect)
+[View Projects](#-featured-projects) • [Skills](#-Skills-&-Tools) • [Contact](#-lets-connect)
 
 ---
 
@@ -80,7 +80,7 @@ Monitor and analyze Azure resource costs to optimize cloud spending and identify
 
 **📂 Technologies:** Power BI | Azure Cost Management | Power Query | DAX
 
-**[📁 View Project Details](Azure%20Cost%20Analysis/README.md)** | **[💾 Download .pbix](Azure%20Cost%20Analysis/Azure%20Cost%20Analysis.pbix)**
+**[📁 View Project Details](Azure%20Cost%20Analysis/Readme.md)** | **[💾 Download .pbix](Azure%20Cost%20Analysis/Azure%20Cost%20Analysis.pbix)**
 
 ---
 
