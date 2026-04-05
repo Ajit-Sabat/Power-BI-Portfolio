@@ -28,7 +28,7 @@ Welcome to my **Power BI portfolio**, showcasing three end-to-end projects that 
 
 <div align="center">
 
-![OTT Dashboard]([Subscription Analysis/OverView Page.png])
+![OTT Dashboard](Subscription%20Analysis/OverView%20Page.png)
 
 </div>
 
