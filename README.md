@@ -49,7 +49,7 @@ Analyze OTT platforms' content distribution, genre trends, and release patterns 
 
 **📂 Technologies:** Power BI | Power Query | DAX
 
-**[📁 View Project Details](OTT-Dataset/README.md)** | **[📊 Interactive Dashboard](#)** | **[💾 Download .pbix](#)**
+**[📁 View Project Details](OTT-Dataset/README.md)** | **[📊 Interactive Dashboard](#)** | **[💾 Download .pbix](Subscription%20Analysis/Subscription%20Analysis.pbix)**
 
 ---
 
@@ -80,7 +80,7 @@ Monitor and analyze Azure resource costs to optimize cloud spending and identify
 
 **📂 Technologies:** Power BI | Azure Cost Management | Power Query | DAX
 
-**[📁 View Project Details](Azure%20Cost%20Analysis/README.md)** | **[📊 Interactive Dashboard](#)** | **[💾 Download .pbix](#)**
+**[📁 View Project Details](Azure%20Cost%20Analysis/README.md)** | **[💾 Download .pbix](Azure%20Cost%20Analysis/Azure%20Cost%20Analysis.pbix)**
 
 ---
 
@@ -111,7 +111,7 @@ Deliver an end-to-end data analytics pipeline and interactive Power BI dashboard
 
 **📂 Technologies:** Power BI | Python (Pandas, NumPy) | MySQL | DAX | Power Query
 
-**[📁 View Project Details](Olist%20Ecommerce%20Dashboard)** 
+**[📁 View Project Details](Olist%20Ecommerce%20Dashboard)** | ** [💾 Download .pbix](Olist%20Ecommerce%20Dashboard/Ecom_Analytics.pbix)
 
 ---
 
