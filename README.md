@@ -28,7 +28,7 @@ Welcome to my **Power BI portfolio**, showcasing three end-to-end projects that 
 
 <div align="center">
 
-![OTT Dashboard]([OTT-Dataset/images/ott_dashboard_preview.png](https://github.com/Ajit-Sabat/Power-BI-Portfolio/blob/main/Subscription%20Analysis/OverView%20Page.png))
+![OTT Dashboard]([OTT-Dataset/images/ott_dashboard_preview.png])
 
 </div>
 
