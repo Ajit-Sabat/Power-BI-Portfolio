@@ -1,0 +1,196 @@
+-- ============================================
+-- SCHEMAS
+-- ============================================
+CREATE SCHEMA Control;
+GO
+CREATE SCHEMA Staging;
+GO
+
+-- ============================================
+-- CONTROL TABLE
+-- ============================================
+CREATE TABLE Control.IngestionControl
+(
+    IngestionID        BIGINT IDENTITY(1,1) NOT NULL,
+    SourceSystem       VARCHAR(50) NOT NULL,
+    DatasetName        VARCHAR(100) NOT NULL,
+    FileName           VARCHAR(255) NOT NULL,
+    FilePath           VARCHAR(1000) NOT NULL,
+    LogicalYear        INT NOT NULL,
+    LogicalMonth       INT NOT NULL,
+    FileSizeBytes      BIGINT NULL,
+    FileHash           VARCHAR(128) NULL,
+    LoadType            VARCHAR(30) NULL,
+    ProcessingStatus   VARCHAR(30) NOT NULL,
+    RowsProcessed      BIGINT NULL,
+    LoadStartTime      DATETIME2(3) NULL,
+    LoadEndTime        DATETIME2(3) NULL,
+    ErrorMessage       NVARCHAR(2000) NULL,
+    CreatedAt          DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAt          DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT PK_IngestionControl PRIMARY KEY (IngestionID)
+);
+GO
+
+CREATE INDEX IX_IngestionControl_File
+ON Control.IngestionControl (SourceSystem, DatasetName, FileName);
+GO
+
+CREATE INDEX IX_IngestionControl_Period
+ON Control.IngestionControl (DatasetName, LogicalYear, LogicalMonth);
+GO
+
+-- ============================================
+-- STAGING TABLE (append-only — no updates ever happen here;
+-- dedup/SCD1 logic lives in Databricks Silver, not SQL)
+-- ============================================
+CREATE TABLE Staging.FlightData
+(
+    YEAR                    SMALLINT NULL,
+    MONTH                   TINYINT NULL,
+    FL_DATE                 DATE NULL,
+    OP_UNIQUE_CARRIER       VARCHAR(10) NULL,
+    OP_CARRIER_FL_NUM       INT NULL,
+    ORIGIN_AIRPORT_ID       INT NULL,
+    ORIGIN                  VARCHAR(10) NULL,
+    ORIGIN_CITY_NAME        VARCHAR(100) NULL,
+    ORIGIN_STATE_NM         VARCHAR(100) NULL,
+    DEST_AIRPORT_ID         INT NULL,
+    DEST                    VARCHAR(10) NULL,
+    DEST_CITY_NAME          VARCHAR(100) NULL,
+    DEST_STATE_NM           VARCHAR(100) NULL,
+    CRS_DEP_TIME            INT NULL,
+    DEP_TIME                INT NULL,
+    DEP_DELAY               DECIMAL(10,2) NULL,
+    DEP_DELAY_NEW           DECIMAL(10,2) NULL,
+    CRS_ARR_TIME            INT NULL,
+    ARR_TIME                INT NULL,
+    ARR_DELAY               DECIMAL(10,2) NULL,
+    ARR_DELAY_NEW           DECIMAL(10,2) NULL,
+    CANCELLED               BIT NULL,
+    CANCELLATION_CODE       VARCHAR(10) NULL,
+    DIVERTED                BIT NULL,
+    CRS_ELAPSED_TIME        DECIMAL(10,2) NULL,
+    ACTUAL_ELAPSED_TIME     DECIMAL(10,2) NULL,
+    AIR_TIME                DECIMAL(10,2) NULL,
+    DISTANCE                DECIMAL(10,2) NULL,
+    CARRIER_DELAY           DECIMAL(10,2) NULL,
+    WEATHER_DELAY           DECIMAL(10,2) NULL,
+    NAS_DELAY               DECIMAL(10,2) NULL,
+    SECURITY_DELAY          DECIMAL(10,2) NULL,
+    LATE_AIRCRAFT_DELAY     DECIMAL(10,2) NULL,
+    -- Ingestion metadata
+    IngestionID             BIGINT NOT NULL,
+    SourceFileName          VARCHAR(255) NOT NULL,
+    SourceFileHash          VARCHAR(128) NULL,
+    LoadedAt                DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME()
+);
+GO
+
+CREATE INDEX IX_FlightData_IngestionID
+ON Staging.FlightData (IngestionID);
+GO
+
+-- ============================================
+-- PROC: usp_CheckFileStatus (stuck-status bug fixed)
+-- ============================================
+CREATE PROCEDURE Control.usp_CheckFileStatus
+(
+    @SourceSystem       VARCHAR(50),
+    @DatasetName        VARCHAR(100),
+    @FileName           VARCHAR(255),
+    @FilePath           VARCHAR(1000),
+    @LogicalYear        INT,
+    @LogicalMonth       INT,
+    @FileSizeBytes      BIGINT = NULL,
+    @FileHash           VARCHAR(128) = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE
+        @ExistingIngestionID BIGINT,
+        @ExistingHash VARCHAR(128),
+        @ExistingStatus VARCHAR(30);
+
+    SELECT TOP 1
+        @ExistingIngestionID = IngestionID,
+        @ExistingHash = FileHash,
+        @ExistingStatus = ProcessingStatus
+    FROM Control.IngestionControl
+    WHERE SourceSystem = @SourceSystem
+      AND DatasetName = @DatasetName
+      AND FileName = @FileName
+    ORDER BY IngestionID DESC;
+
+    IF @ExistingIngestionID IS NULL
+    BEGIN
+        INSERT INTO Control.IngestionControl
+        (SourceSystem, DatasetName, FileName, FilePath, LogicalYear, LogicalMonth,
+         FileSizeBytes, FileHash, LoadType, ProcessingStatus)
+        VALUES
+        (@SourceSystem, @DatasetName, @FileName, @FilePath, @LogicalYear, @LogicalMonth,
+         @FileSizeBytes, @FileHash, 'INITIAL', 'NEW');
+
+        SELECT 'NEW' AS FileStatus, CAST(SCOPE_IDENTITY() AS BIGINT) AS IngestionID;
+        RETURN;
+    END;
+
+    IF ISNULL(@ExistingHash, '') = ISNULL(@FileHash, '') AND @ExistingStatus = 'SUCCESS'
+    BEGIN
+        SELECT 'ALREADY_PROCESSED' AS FileStatus, @ExistingIngestionID AS IngestionID;
+        RETURN;
+    END;
+
+    IF ISNULL(@ExistingHash, '') <> ISNULL(@FileHash, '')
+    BEGIN
+        INSERT INTO Control.IngestionControl
+        (SourceSystem, DatasetName, FileName, FilePath, LogicalYear, LogicalMonth,
+         FileSizeBytes, FileHash, LoadType, ProcessingStatus)
+        VALUES
+        (@SourceSystem, @DatasetName, @FileName, @FilePath, @LogicalYear, @LogicalMonth,
+         @FileSizeBytes, @FileHash, 'REPROCESS', 'CHANGED');
+
+        SELECT 'CHANGED' AS FileStatus, CAST(SCOPE_IDENTITY() AS BIGINT) AS IngestionID;
+        RETURN;
+    END;
+
+    -- Covers FAILED, NEW (crashed before PROCESSING), and PROCESSING (crashed mid-run)
+    IF @ExistingStatus IN ('FAILED', 'NEW', 'PROCESSING')
+    BEGIN
+        UPDATE Control.IngestionControl
+        SET ProcessingStatus = 'NEW',
+            LoadType = 'RETRY',
+            UpdatedAt = SYSUTCDATETIME()
+        WHERE IngestionID = @ExistingIngestionID;
+
+        SELECT 'RETRY' AS FileStatus, @ExistingIngestionID AS IngestionID;
+        RETURN;
+    END;
+END;
+GO
+
+-- ============================================
+-- PROC: usp_UpdateIngestionStatus (unchanged — already correct)
+-- ============================================
+CREATE PROCEDURE Control.usp_UpdateIngestionStatus
+(
+    @IngestionID       BIGINT,
+    @ProcessingStatus  VARCHAR(30),
+    @RowsProcessed     BIGINT = NULL,
+    @ErrorMessage      NVARCHAR(2000) = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Control.IngestionControl
+    SET
+        ProcessingStatus = @ProcessingStatus,
+        RowsProcessed = COALESCE(@RowsProcessed, RowsProcessed),
+        ErrorMessage = @ErrorMessage,
+        LoadStartTime = CASE WHEN @ProcessingStatus = 'PROCESSING' THEN SYSUTCDATETIME() ELSE LoadStartTime END,
+        LoadEndTime = CASE WHEN @ProcessingStatus IN ('SUCCESS', 'FAILED') THEN SYSUTCDATETIME() ELSE LoadEndTime END,
+        UpdatedAt = SYSUTCDATETIME()
+    WHERE IngestionID = @IngestionID;
+END;
+GO
