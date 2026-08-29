@@ -1,0 +1,30 @@
+{
+    "name": "AviationPipeline",
+    "properties": {
+        "annotations": [],
+        "runtimeState": "Started",
+        "pipelines": [
+            {
+                "pipelineReference": {
+                    "referenceName": "PL_Initial_Load_FlightData",
+                    "type": "PipelineReference"
+                },
+                "parameters": {
+                    "FolderPath": "@last(split(triggerBody().folderPath, '/'))",
+                    "SourceSystem": "BTS",
+                    "DatasetName": "FlightData"
+                }
+            }
+        ],
+        "type": "BlobEventsTrigger",
+        "typeProperties": {
+            "blobPathBeginsWith": "/bronze/blobs/2026",
+            "blobPathEndsWith": ".csv",
+            "ignoreEmptyBlobs": true,
+            "scope": "/subscriptions/54287213-2a40-4ce9-a866-c551935699bf/resourceGroups/rg_aviation/providers/Microsoft.Storage/storageAccounts/aviationdls",
+            "events": [
+                "Microsoft.Storage.BlobCreated"
+            ]
+        }
+    }
+}
