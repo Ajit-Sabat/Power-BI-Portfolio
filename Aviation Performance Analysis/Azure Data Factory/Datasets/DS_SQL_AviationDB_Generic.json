@@ -1,0 +1,13 @@
+{
+    "name": "DS_SQL_AviationDB_Generic",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "ls_aviation_sqldb",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "AzureSqlTable",
+        "schema": []
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

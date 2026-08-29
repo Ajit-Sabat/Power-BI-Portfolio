@@ -1,0 +1,207 @@
+{
+    "name": "DS_SQL_Staging_FlightData",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "ls_aviation_sqldb",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "AzureSqlTable",
+        "schema": [
+            {
+                "name": "YEAR",
+                "type": "smallint",
+                "precision": 5
+            },
+            {
+                "name": "MONTH",
+                "type": "tinyint",
+                "precision": 3
+            },
+            {
+                "name": "FL_DATE",
+                "type": "date"
+            },
+            {
+                "name": "OP_UNIQUE_CARRIER",
+                "type": "varchar"
+            },
+            {
+                "name": "OP_CARRIER_FL_NUM",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "ORIGIN_AIRPORT_ID",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "ORIGIN",
+                "type": "varchar"
+            },
+            {
+                "name": "ORIGIN_CITY_NAME",
+                "type": "varchar"
+            },
+            {
+                "name": "ORIGIN_STATE_NM",
+                "type": "varchar"
+            },
+            {
+                "name": "DEST_AIRPORT_ID",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "DEST",
+                "type": "varchar"
+            },
+            {
+                "name": "DEST_CITY_NAME",
+                "type": "varchar"
+            },
+            {
+                "name": "DEST_STATE_NM",
+                "type": "varchar"
+            },
+            {
+                "name": "CRS_DEP_TIME",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "DEP_TIME",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "DEP_DELAY",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "DEP_DELAY_NEW",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "CRS_ARR_TIME",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "ARR_TIME",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "ARR_DELAY",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "ARR_DELAY_NEW",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "CANCELLED",
+                "type": "decimal",
+                "precision": 3,
+                "scale": 2
+            },
+            {
+                "name": "CANCELLATION_CODE",
+                "type": "varchar"
+            },
+            {
+                "name": "DIVERTED",
+                "type": "decimal",
+                "precision": 3,
+                "scale": 2
+            },
+            {
+                "name": "CRS_ELAPSED_TIME",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "ACTUAL_ELAPSED_TIME",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "AIR_TIME",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "DISTANCE",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "CARRIER_DELAY",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "WEATHER_DELAY",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "NAS_DELAY",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "SECURITY_DELAY",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "LATE_AIRCRAFT_DELAY",
+                "type": "decimal",
+                "precision": 10,
+                "scale": 2
+            },
+            {
+                "name": "IngestionID",
+                "type": "bigint",
+                "precision": 19
+            },
+            {
+                "name": "SourceFileName",
+                "type": "varchar"
+            },
+            {
+                "name": "SourceFileHash",
+                "type": "varchar"
+            },
+            {
+                "name": "LoadedAt",
+                "type": "datetime2",
+                "scale": 3
+            }
+        ],
+        "typeProperties": {
+            "schema": "Staging",
+            "table": "FlightData"
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}
