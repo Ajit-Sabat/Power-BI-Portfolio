@@ -1,0 +1,959 @@
+{
+    "name": "PL_Initial_Load_FlightData",
+    "properties": {
+        "activities": [
+            {
+                "name": "GetMeta_FolderList",
+                "type": "GetMetadata",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "dataset": {
+                        "referenceName": "DS_Bronze_BTS_Folder",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "FolderPath": {
+                                "value": "@pipeline().parameters.FolderPath",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    "fieldList": [
+                        "childItems"
+                    ],
+                    "storeSettings": {
+                        "type": "AzureBlobFSReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
+                    },
+                    "formatSettings": {
+                        "type": "DelimitedTextReadSettings"
+                    }
+                }
+            },
+            {
+                "name": "FE_ProcessFiles",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "GetMeta_FolderList",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('GetMeta_FolderList').output.childItems",
+                        "type": "Expression"
+                    },
+                    "activities": [
+                        {
+                            "name": "GetMeta_BronzeFile",
+                            "type": "GetMetadata",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "dataset": {
+                                    "referenceName": "DS_Bronze_BTS_Generic",
+                                    "type": "DatasetReference",
+                                    "parameters": {
+                                        "FileName": {
+                                            "value": "@item().name",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                },
+                                "fieldList": [
+                                    "itemName",
+                                    "lastModified",
+                                    "size"
+                                ],
+                                "storeSettings": {
+                                    "type": "AzureBlobFSReadSettings",
+                                    "recursive": true,
+                                    "enablePartitionDiscovery": false
+                                },
+                                "formatSettings": {
+                                    "type": "DelimitedTextReadSettings"
+                                }
+                            }
+                        },
+                        {
+                            "name": "LKP_CheckFileStatus",
+                            "type": "Lookup",
+                            "dependsOn": [
+                                {
+                                    "activity": "GetMeta_BronzeFile",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "source": {
+                                    "type": "AzureSqlSource",
+                                    "sqlReaderStoredProcedureName": "[Control].[usp_CheckFileStatus]",
+                                    "storedProcedureParameters": {
+                                        "DatasetName": {
+                                            "type": "String",
+                                            "value": {
+                                                "value": "@pipeline().parameters.DatasetName",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "FileHash": {
+                                            "type": "String",
+                                            "value": {
+                                                "value": "@''",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "FileName": {
+                                            "type": "String",
+                                            "value": {
+                                                "value": "@item().name",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "FilePath": {
+                                            "type": "String",
+                                            "value": {
+                                                "value": "@concat('bronze/', pipeline().parameters.FolderPath, '/', item().name)",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "FileSizeBytes": {
+                                            "type": "Int64",
+                                            "value": {
+                                                "value": "@activity('GetMeta_BronzeFile').output.size",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "LogicalMonth": {
+                                            "type": "Int32",
+                                            "value": {
+                                                "value": "@int(split(split(item().name, '_')[1], '.')[0])",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "LogicalYear": {
+                                            "type": "Int32",
+                                            "value": {
+                                                "value": "@int(split(item().name, '_')[0])",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "SourceSystem": {
+                                            "type": "String",
+                                            "value": {
+                                                "value": "@pipeline().parameters.SourceSystem",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    },
+                                    "queryTimeout": "02:00:00",
+                                    "partitionOption": "None"
+                                },
+                                "dataset": {
+                                    "referenceName": "DS_SQL_AviationDB_Generic",
+                                    "type": "DatasetReference"
+                                }
+                            }
+                        },
+                        {
+                            "name": "IF_ShouldProcess",
+                            "type": "IfCondition",
+                            "dependsOn": [
+                                {
+                                    "activity": "LKP_CheckFileStatus",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "userProperties": [],
+                            "typeProperties": {
+                                "expression": {
+                                    "value": "@or(or(equals(activity('LKP_CheckFileStatus').output.firstRow.FileStatus, 'NEW'), equals(activity('LKP_CheckFileStatus').output.firstRow.FileStatus, 'CHANGED')), equals(activity('LKP_CheckFileStatus').output.firstRow.FileStatus, 'RETRY'))",
+                                    "type": "Expression"
+                                },
+                                "ifTrueActivities": [
+                                    {
+                                        "name": "SP_MarkProcessing",
+                                        "type": "SqlServerStoredProcedure",
+                                        "dependsOn": [],
+                                        "policy": {
+                                            "timeout": "0.12:00:00",
+                                            "retry": 0,
+                                            "retryIntervalInSeconds": 30,
+                                            "secureOutput": false,
+                                            "secureInput": false
+                                        },
+                                        "userProperties": [],
+                                        "typeProperties": {
+                                            "storedProcedureName": "[Control].[usp_UpdateIngestionStatus]",
+                                            "storedProcedureParameters": {
+                                                "ErrorMessage": {
+                                                    "value": {
+                                                        "value": "@null",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "String"
+                                                },
+                                                "IngestionID": {
+                                                    "value": {
+                                                        "value": "@activity('LKP_CheckFileStatus').output.firstRow.IngestionID",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "Int64"
+                                                },
+                                                "ProcessingStatus": {
+                                                    "value": {
+                                                        "value": "PROCESSING",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "String"
+                                                },
+                                                "RowsProcessed": {
+                                                    "value": {
+                                                        "value": "@null",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "Int64"
+                                                }
+                                            }
+                                        },
+                                        "linkedServiceName": {
+                                            "referenceName": "ls_aviation_sqldb",
+                                            "type": "LinkedServiceReference"
+                                        }
+                                    },
+                                    {
+                                        "name": "COPY_BronzeToStaging",
+                                        "type": "Copy",
+                                        "dependsOn": [
+                                            {
+                                                "activity": "SP_MarkProcessing",
+                                                "dependencyConditions": [
+                                                    "Succeeded"
+                                                ]
+                                            }
+                                        ],
+                                        "policy": {
+                                            "timeout": "0.12:00:00",
+                                            "retry": 0,
+                                            "retryIntervalInSeconds": 30,
+                                            "secureOutput": false,
+                                            "secureInput": false
+                                        },
+                                        "userProperties": [
+                                            {
+                                                "name": "Source",
+                                                "value": "bronze/@{pipeline().parameters.FolderPath}/@{item().name}"
+                                            },
+                                            {
+                                                "name": "Destination",
+                                                "value": "Staging.FlightData"
+                                            }
+                                        ],
+                                        "typeProperties": {
+                                            "source": {
+                                                "type": "DelimitedTextSource",
+                                                "additionalColumns": [
+                                                    {
+                                                        "name": "IngestionID",
+                                                        "value": {
+                                                            "value": "@activity('LKP_CheckFileStatus').output.firstRow.IngestionID",
+                                                            "type": "Expression"
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "SourceFileName",
+                                                        "value": {
+                                                            "value": "@item().name",
+                                                            "type": "Expression"
+                                                        }
+                                                    }
+                                                ],
+                                                "storeSettings": {
+                                                    "type": "AzureBlobFSReadSettings",
+                                                    "recursive": true,
+                                                    "enablePartitionDiscovery": false
+                                                },
+                                                "formatSettings": {
+                                                    "type": "DelimitedTextReadSettings"
+                                                }
+                                            },
+                                            "sink": {
+                                                "type": "AzureSqlSink",
+                                                "writeBehavior": "insert",
+                                                "sqlWriterUseTableLock": false
+                                            },
+                                            "enableStaging": false,
+                                            "translator": {
+                                                "type": "TabularTranslator",
+                                                "mappings": [
+                                                    {
+                                                        "source": {
+                                                            "name": "YEAR",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "YEAR",
+                                                            "type": "Int16",
+                                                            "physicalType": "smallint"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "MONTH",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "MONTH",
+                                                            "type": "Byte",
+                                                            "physicalType": "tinyint"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "FL_DATE",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "FL_DATE",
+                                                            "type": "Date",
+                                                            "physicalType": "date"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "OP_UNIQUE_CARRIER",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "OP_UNIQUE_CARRIER",
+                                                            "type": "String",
+                                                            "physicalType": "varchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "OP_CARRIER_FL_NUM",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "OP_CARRIER_FL_NUM",
+                                                            "type": "Int32",
+                                                            "physicalType": "int"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "ORIGIN_AIRPORT_ID",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "ORIGIN_AIRPORT_ID",
+                                                            "type": "Int32",
+                                                            "physicalType": "int"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "ORIGIN",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "ORIGIN",
+                                                            "type": "String",
+                                                            "physicalType": "varchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "ORIGIN_CITY_NAME",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "ORIGIN_CITY_NAME",
+                                                            "type": "String",
+                                                            "physicalType": "varchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "ORIGIN_STATE_NM",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "ORIGIN_STATE_NM",
+                                                            "type": "String",
+                                                            "physicalType": "varchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "DEST_AIRPORT_ID",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "DEST_AIRPORT_ID",
+                                                            "type": "Int32",
+                                                            "physicalType": "int"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "DEST",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "DEST",
+                                                            "type": "String",
+                                                            "physicalType": "varchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "DEST_CITY_NAME",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "DEST_CITY_NAME",
+                                                            "type": "String",
+                                                            "physicalType": "varchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "DEST_STATE_NM",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "DEST_STATE_NM",
+                                                            "type": "String",
+                                                            "physicalType": "varchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "CRS_DEP_TIME",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "CRS_DEP_TIME",
+                                                            "type": "Int32",
+                                                            "physicalType": "int"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "DEP_TIME",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "DEP_TIME",
+                                                            "type": "Int32",
+                                                            "physicalType": "int"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "DEP_DELAY",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "DEP_DELAY",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "DEP_DELAY_NEW",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "DEP_DELAY_NEW",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "CRS_ARR_TIME",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "CRS_ARR_TIME",
+                                                            "type": "Int32",
+                                                            "physicalType": "int"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "ARR_TIME",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "ARR_TIME",
+                                                            "type": "Int32",
+                                                            "physicalType": "int"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "ARR_DELAY",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "ARR_DELAY",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "ARR_DELAY_NEW",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "ARR_DELAY_NEW",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "CANCELLED",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "CANCELLED",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 3
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "CANCELLATION_CODE",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "CANCELLATION_CODE",
+                                                            "type": "String",
+                                                            "physicalType": "varchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "DIVERTED",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "DIVERTED",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 3
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "CRS_ELAPSED_TIME",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "CRS_ELAPSED_TIME",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "ACTUAL_ELAPSED_TIME",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "ACTUAL_ELAPSED_TIME",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "AIR_TIME",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "AIR_TIME",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "DISTANCE",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "DISTANCE",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "CARRIER_DELAY",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "CARRIER_DELAY",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "WEATHER_DELAY",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "WEATHER_DELAY",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "NAS_DELAY",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "NAS_DELAY",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "SECURITY_DELAY",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "SECURITY_DELAY",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "LATE_AIRCRAFT_DELAY",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "LATE_AIRCRAFT_DELAY",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 10
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "IngestionID",
+                                                            "type": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "IngestionID",
+                                                            "type": "Int64",
+                                                            "physicalType": "bigint"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "SourceFileName",
+                                                            "type": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "SourceFileName",
+                                                            "type": "String",
+                                                            "physicalType": "varchar"
+                                                        }
+                                                    }
+                                                ],
+                                                "typeConversion": true,
+                                                "typeConversionSettings": {
+                                                    "allowDataTruncation": false,
+                                                    "treatBooleanAsNumber": true,
+                                                    "dateFormat": {
+                                                        "value": "dd-MM-yyyy HH:mm",
+                                                        "type": "Expression"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "inputs": [
+                                            {
+                                                "referenceName": "DS_Bronze_BTS_Generic",
+                                                "type": "DatasetReference",
+                                                "parameters": {
+                                                    "FileName": {
+                                                        "value": "@item().name",
+                                                        "type": "Expression"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "outputs": [
+                                            {
+                                                "referenceName": "DS_SQL_Staging_FlightData",
+                                                "type": "DatasetReference"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "SP_MarkSuccess",
+                                        "type": "SqlServerStoredProcedure",
+                                        "dependsOn": [
+                                            {
+                                                "activity": "COPY_BronzeToStaging",
+                                                "dependencyConditions": [
+                                                    "Succeeded"
+                                                ]
+                                            }
+                                        ],
+                                        "policy": {
+                                            "timeout": "0.12:00:00",
+                                            "retry": 0,
+                                            "retryIntervalInSeconds": 30,
+                                            "secureOutput": false,
+                                            "secureInput": false
+                                        },
+                                        "userProperties": [],
+                                        "typeProperties": {
+                                            "storedProcedureName": "[Control].[usp_UpdateIngestionStatus]",
+                                            "storedProcedureParameters": {
+                                                "ErrorMessage": {
+                                                    "value": {
+                                                        "value": "@null",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "String"
+                                                },
+                                                "IngestionID": {
+                                                    "value": {
+                                                        "value": "@activity('LKP_CheckFileStatus').output.firstRow.IngestionID",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "Int64"
+                                                },
+                                                "ProcessingStatus": {
+                                                    "value": "SUCCESS",
+                                                    "type": "String"
+                                                },
+                                                "RowsProcessed": {
+                                                    "value": {
+                                                        "value": "@activity('COPY_BronzeToStaging').output.rowsCopied",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "Int64"
+                                                }
+                                            }
+                                        },
+                                        "linkedServiceName": {
+                                            "referenceName": "ls_aviation_sqldb",
+                                            "type": "LinkedServiceReference"
+                                        }
+                                    },
+                                    {
+                                        "name": "SP_MarkFailed",
+                                        "type": "SqlServerStoredProcedure",
+                                        "dependsOn": [
+                                            {
+                                                "activity": "COPY_BronzeToStaging",
+                                                "dependencyConditions": [
+                                                    "Failed"
+                                                ]
+                                            }
+                                        ],
+                                        "policy": {
+                                            "timeout": "0.12:00:00",
+                                            "retry": 0,
+                                            "retryIntervalInSeconds": 30,
+                                            "secureOutput": false,
+                                            "secureInput": false
+                                        },
+                                        "userProperties": [],
+                                        "typeProperties": {
+                                            "storedProcedureName": "[Control].[usp_UpdateIngestionStatus]",
+                                            "storedProcedureParameters": {
+                                                "ErrorMessage": {
+                                                    "value": {
+                                                        "value": "@string(activity('COPY_BronzeToStaging').error.message)",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "String"
+                                                },
+                                                "IngestionID": {
+                                                    "value": {
+                                                        "value": "@activity('LKP_CheckFileStatus').output.firstRow.IngestionID",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "Int64"
+                                                },
+                                                "ProcessingStatus": {
+                                                    "value": "FAILED",
+                                                    "type": "String"
+                                                },
+                                                "RowsProcessed": {
+                                                    "value": {
+                                                        "value": "@null",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "Int64"
+                                                }
+                                            }
+                                        },
+                                        "linkedServiceName": {
+                                            "referenceName": "ls_aviation_sqldb",
+                                            "type": "LinkedServiceReference"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "DatabrickAviationJob",
+                "type": "DatabricksJob",
+                "dependsOn": [
+                    {
+                        "activity": "FE_ProcessFiles",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "jobId": "157593797840177"
+                },
+                "linkedServiceName": {
+                    "referenceName": "LS_Databricks",
+                    "type": "LinkedServiceReference"
+                }
+            }
+        ],
+        "parameters": {
+            "FolderPath": {
+                "type": "string",
+                "defaultValue": "2026"
+            },
+            "SourceSystem": {
+                "type": "string",
+                "defaultValue": "BTS"
+            },
+            "DatasetName": {
+                "type": "string",
+                "defaultValue": "FlightData"
+            }
+        },
+        "annotations": [],
+        "lastPublishTime": "2026-08-29T06:02:03Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
