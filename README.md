@@ -88,7 +88,7 @@ Monitor and analyze Azure resource costs to optimize cloud spending and identify
 
 <div align="center">
 
-![Olist Dashboard](Olist%20Ecommerce%20Dashboard/Executive Summary.png)
+![Olist Dashboard](Olist%20Ecommerce%20Dashboard/Executive Summary.PNG)
 
 </div>
 
