@@ -93,7 +93,7 @@ Trigger parameter mapping:
 | `SourceSystem` | `BTS` (static) |
 | `DatasetName` | `FlightData` (static) |
 
-Full pipeline JSON: [`adf/PL_Initial_Load_FlightData.json`](Azure Data Factory/PL_Initial_Load_FlightData.json)
+Full pipeline JSON: [`adf`](Azure Data Factory/)
 
 ---
 
