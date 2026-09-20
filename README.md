@@ -205,7 +205,7 @@ python data_processing.py
 
 I'm always interested in discussing new projects, collaboration opportunities, or Power BI best practices!
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/ajitkumarsabat)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](www.linkedin.com/in/ajitkumar-sabat-9a1720218)
 [![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:ajit.sabat1715@gmail.com)
 
 ### 💼 Open to:
@@ -216,17 +216,6 @@ I'm always interested in discussing new projects, collaboration opportunities, o
 
 </div>
 
----
-
-## ⭐ Support This Portfolio
-
-If you found these projects helpful or learned something new:
-- ⭐ **Star this repository** to show your support
-- 🔄 **Share** with your network
-- 💬 **Provide feedback** via [Issues](https://github.com/Ajit-Sabat/Power-BI-Portfolio/issues)
-- 🤝 **Connect on LinkedIn** for professional networking
-
----
 
 ## 📝 Notes
 
