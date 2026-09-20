@@ -109,7 +109,7 @@ Full pipeline JSON: [`adf/PL_Initial_Load_FlightData.json`](Azure Data Factory/P
 
 **Job:** both notebooks run as sequential tasks in one Databricks Job on **Serverless** compute, triggered by ADF's Databricks Job activity (not the Notebook activity, since this workspace is serverless-only).
 
-Full notebook source: [`databricks/`](databricks/)
+Full notebook source: [`databricks/`](Notebooks/)
 
 ---
 
