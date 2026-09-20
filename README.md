@@ -49,7 +49,7 @@ Analyze OTT platforms' content distribution, genre trends, and release patterns 
 
 **📂 Technologies:** Power BI | Power Query | DAX
 
-**[📁 View Project Details](OTT-Dataset/README.md)** | **[📊 Interactive Dashboard](#)** | **[💾 Download .pbix](Subscription%20Analysis/Subscription%20Analysis.pbix)**
+**[📁 View Project Details](Subscription%20Analysis/README.md)** | **[💾 Download .pbix](Subscription%20Analysis/Subscription%20Analysis.pbix)**
 
 ---
 
