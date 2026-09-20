@@ -58,7 +58,7 @@ Azure Data Lake Storage Gen2 · Azure Data Factory · Azure SQL Database · Azur
 | `Control.usp_CheckFileStatus` | Determines whether a file is NEW / CHANGED / RETRY / ALREADY_PROCESSED |
 | `Control.usp_UpdateIngestionStatus` | Updates status, row counts, timestamps, error messages |
 
-Full DDL and stored procedures: [`sql/`](sql/)
+Full DDL and stored procedures: [`SQL/`](SQL/)
 
 ---
 
@@ -93,7 +93,7 @@ Trigger parameter mapping:
 | `SourceSystem` | `BTS` (static) |
 | `DatasetName` | `FlightData` (static) |
 
-Full pipeline JSON: [`adf/PL_Initial_Load_FlightData.json`](adf/PL_Initial_Load_FlightData.json)
+Full pipeline JSON: [`adf/PL_Initial_Load_FlightData.json`](Azure Data Factory/PL_Initial_Load_FlightData.json)
 
 ---
 
